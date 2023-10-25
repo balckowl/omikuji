@@ -1,6 +1,13 @@
 // hey.jsのmodule.exportsを呼び出します。
+const express = require('express');
 const heyFile = require('./commands/hey.js');
 require('dotenv').config();
+const app = express();
+const port = process.env.PORT || 80; 
+
+app.listen(port, () => {
+    console.log(`Server is listening on port ${port}`);
+});
 
 // discord.jsライブラリの中から必要な設定を呼び出し、変数に保存します
 const { Client, Events, GatewayIntentBits } = require('discord.js');

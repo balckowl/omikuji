@@ -31,6 +31,6 @@ module.exports = {
 
     // ユーザーの最後のおみくじ引き日を更新
     userLastDrawDate.set(userId, new Date());
+
   },
 };
-

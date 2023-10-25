@@ -43,3 +43,29 @@ client.on(Events.InteractionCreate, async interaction => {
 
 // ログインします
 client.login(token);
+
+// discord.js v14では、下記のようにRESTとRoutesはdiscord.jsパッケージから直接インポートできます
+const { REST, Routes } = require('discord.js');
+
+// 環境変数としてapplicationId, guildId, tokenの3つが必要です
+const applicationId = process.env.DISCORD_APPLICATIONID
+const guildId = process.env.DISCORD_GUILDID
+
+// 登録コマンドを呼び出してリスト形式で登録
+const commands = [heyFile.data.toJSON()];
+
+// DiscordのAPIには現在最新のversion10を指定
+const rest = new REST({ version: '10' }).setToken(token);
+
+// Discordサーバーにコマンドを登録
+(async () => {
+    try {
+        await rest.put(
+            Routes.applicationGuildCommands(applicationId, guildId),
+            { body: commands },
+        );
+        console.log('サーバー固有のコマンドが登録されました！');
+    } catch (error) {
+        console.error('コマンドの登録中にエラーが発生しました:', error);
+    }
+})();

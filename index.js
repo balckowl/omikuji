@@ -1,10 +1,11 @@
 // hey.jsのmodule.exportsを呼び出します。
 const heyFile = require('./commands/hey.js');
+require('dotenv').config();
 
 // discord.jsライブラリの中から必要な設定を呼び出し、変数に保存します
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 // 設定ファイルからトークン情報を呼び出し、変数に保存します
-const { token } = require('./config.json');
+const token = process.env.DISCORD_TOKEN
 // クライアントインスタンスと呼ばれるオブジェクトを作成します
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 

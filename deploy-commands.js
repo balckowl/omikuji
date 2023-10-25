@@ -1,11 +1,14 @@
 // discord.js v14では、下記のようにRESTとRoutesはdiscord.jsパッケージから直接インポートできます
 const { REST, Routes } = require('discord.js');
+require('dotenv').config();
 
 // hey.jsのmodule.exportsを呼び出します。
 const heyFile = require('./commands/hey.js');
 
 // 環境変数としてapplicationId, guildId, tokenの3つが必要です
-const { applicationId, guildId, token } = require('./config.json');
+const applicationId = process.env.DISCORD_APPLICATIONID
+const guildId = process.env.DISCORD_GUILDID
+const token = process.env.DISCORD_TOKEN
 
 // 登録コマンドを呼び出してリスト形式で登録
 const commands = [heyFile.data.toJSON()];

@@ -107,8 +107,6 @@ ${text}
 
 過去５回のおみくじ結果: ${omikujiHistoryMessage}<-new`
 
-    console.log(omikujiPaper)
-
-    // await interaction.editReply(omikujiPaper)
+    await interaction.editReply(omikujiPaper)
   },
 };

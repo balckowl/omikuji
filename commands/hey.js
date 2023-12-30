@@ -21,6 +21,9 @@ module.exports = {
     .setDescription('1日1回限りのおみくじを引くことができます'),
 
   execute: async function (interaction) {
+
+    await interaction.deferReply();
+
     const db = admin.firestore()
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const userId = interaction.user.id;
@@ -87,9 +90,7 @@ module.exports = {
     #ルール
     *100文字以内で
     `
-
-    await interaction.deferReply();
-
+    
     const result = await model.generateContent(prompt)
     const response = result.response
     const text = response.text()

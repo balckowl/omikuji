@@ -59,7 +59,9 @@ const applicationId = process.env.DISCORD_APPLICATIONID
 const guildId = process.env.DISCORD_GUILDID
 
 // 登録コマンドを呼び出してリスト形式で登録
-const commands = [heyFile.data.toJSON()];
+const commands = [
+    heyFile.data.toJSON()
+];
 
 // DiscordのAPIには現在最新のversion10を指定
 const rest = new REST({ version: '10' }).setToken(token);

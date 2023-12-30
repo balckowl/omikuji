@@ -11,20 +11,23 @@ const guildId = process.env.DISCORD_GUILDID
 const token = process.env.DISCORD_TOKEN
 
 // 登録コマンドを呼び出してリスト形式で登録
-const commands = [heyFile.data.toJSON()];
+const commands = [
+    heyFile.data.toJSON()
+];
 
 // DiscordのAPIには現在最新のversion10を指定
 const rest = new REST({ version: '10' }).setToken(token);
 
 // Discordサーバーにコマンドを登録
+// 以前のコードの続き...
 (async () => {
     try {
         await rest.put(
             Routes.applicationGuildCommands(applicationId, guildId),
             { body: commands },
         );
-        console.log('サーバー固有のコマンドが登録されました！');
+        console.log('サーバー固有のコマンドが更新されました！');
     } catch (error) {
-        console.error('コマンドの登録中にエラーが発生しました:', error);
+        console.error('コマンドの更新中にエラーが発生しました:', error);
     }
 })();

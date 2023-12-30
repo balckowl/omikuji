@@ -59,7 +59,7 @@ module.exports = {
 
       // 最後のおみくじ引き日が今日であれば、おみくじを引けない
       if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
-        await interaction.reply("おみくじは1日に1回しか引けません。");
+        await interaction.editReply("おみくじは1日に1回しか引けません。");
         return;
       } else {
         omikujiHistory = await userDoc.data().omikujiResults;
@@ -90,7 +90,7 @@ module.exports = {
     #ルール
     *100文字以内で
     `
-    
+
     const result = await model.generateContent(prompt)
     const response = result.response
     const text = response.text()
@@ -108,6 +108,7 @@ ${text}
 
 過去５回のおみくじ結果: ${omikujiHistoryMessage}<-new`
 
+    console.log(omikujiPaper)
     await interaction.editReply(omikujiPaper)
   },
 };

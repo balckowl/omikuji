@@ -43,7 +43,7 @@ module.exports = {
       currentDate.setHours(0, 0, 0, 0);
 
       // 最後のおみくじ引き日が今日であれば、おみくじを引けない
-      if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
+      if (lastOmikujiDate.setHours(0, 0, 0, 0) >= currentDate.getTime()) {
         await interaction.editReply("おみくじは1日に1回しか引けません。");
         return;
       } else {

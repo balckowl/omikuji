@@ -1,16 +1,19 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const omikuji = ['大吉', '吉', '中吉', '小吉', '半吉', '末吉', '末小吉', '凶', '大凶'];
+const userLastDrawDate = new Map(); // ユーザーごとの最後のおみくじ引き日を記録
 require('dotenv').config();
 const geminiApikey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(geminiApikey);
 
 var admin = require("firebase-admin");
+
 var serviceAccount = require("../serviceAccountKey.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
+
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,61 +22,93 @@ module.exports = {
 
   execute: async function (interaction) {
 
-    console.log('hello')
+    await interaction.deferReply(); 
 
-    try {
-      console.log("コマンド実行開始");
-      await interaction.deferReply(); 
-      console.log("deferReply 完了");
+    const db = admin.firestore()
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const userId = interaction.user.id;
+    const userName = interaction.user.username;
+    let omikujiHistory = [];
+    let omikujiHistoryMessage = "";
+    let lastOmikujiDate = null;
 
-      const db = admin.firestore();
-      console.log("Firestore 接続");
-      const userId = interaction.user.id;
-      const userName = interaction.user.username;
+    ユーザーの最後のおみくじ引き日を取得
+    const lastDrawDate = userLastDrawDate.get(userId);
 
-      const userDoc = await db.collection('users').doc(userId).get();
-      console.log("Firestore ドキュメント取得");
+    if (lastDrawDate) {
+      // 現在の日付を取得
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0); // 時刻を0時0分0秒に設定
 
-      let lastOmikujiDate = null;
-      let omikujiHistoryMessage = "";
-
-      if (userDoc.exists) {
-        const latestResult = userDoc.data().omikujiResults[userDoc.data().omikujiResults.length - 1];
-        lastOmikujiDate = latestResult.date.toDate();
-
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
-
-        if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
-          await interaction.followUp("おみくじは1日に1回しか引けません。");
-          return;
-        }
-
-        const recentResults = userDoc.data().omikujiResults.slice(-5);
-        const results = recentResults.map(entry => entry.result);
-        omikujiHistoryMessage = results.join(', ');
+      // 最後のおみくじ引き日と現在の日付を比較
+      if (lastDrawDate.getTime() >= currentDate.getTime()) {
+        await interaction.reply("おみくじは1日に1回しか引けません。");
+        return;
       }
-
-      const randomResult = omikuji[Math.floor(Math.random() * omikuji.length)];
-      console.log("おみくじ結果生成: " + randomResult);
-
-      const prompt = `あなたの今日の運勢は${randomResult}です。運勢についてのコメントをください。`;
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-
-      await db.collection('users').doc(userId).set({
-        username: userName,
-        omikujiResults: admin.firestore.FieldValue.arrayUnion({ result: randomResult, date: admin.firestore.Timestamp.now() })
-      }, { merge: true });
-      console.log("Firestore に結果保存");
-
-      const omikujiPaper = `${userName}様の今日の運勢\n\n${text}\n\n過去５回のおみくじ結果: ${omikujiHistoryMessage}`;
-      console.log("応答生成: " + omikujiPaper);
-      await interaction.editReply(omikujiPaper);
-      console.log("応答送信完了");
-    } catch (error) {
-      console.error("エラー発生: ", error);
-      await interaction.followUp("エラーが発生しました。");
     }
+
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (userDoc.exists) {
+
+      const latestResult = userDoc.data().omikujiResults[userDoc.data().omikujiResults.length - 1];
+      lastOmikujiDate = latestResult.date.toDate();
+
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      // 最後のおみくじ引き日が今日であれば、おみくじを引けない
+      if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
+        // await interaction.reply("おみくじは1日に1回しか引けません。");
+        return;
+      } else {
+      omikujiHistory = await userDoc.data().omikujiResults;
+      const recentResults = omikujiHistory.slice(-5);
+      // 各エントリのresultプロパティを抽出
+      const results = recentResults.map(entry => entry.result);
+      // 結果をカンマで結合
+      omikujiHistoryMessage = results.join(', ');
+      }
+    }
+
+    // おみくじの実行
+    const randomResult = omikuji[Math.floor(Math.random() * omikuji.length)];
+
+    const prompt =
+      `
+    あなたは{ #役割 }です。次の{ #ルール }に従って、おみくじの結果である${randomResult}に合うような回答を{ #形式 }でお願いします。
+
+    #役割
+    おみくじの結果に対するコメントを出力する
+
+    #形式
+    *おみくじ結果をまず最初に太字で表示して
+    *絵文字を交えて
+    *金運、恋愛運、仕事運、勉強運、健康運を含めて、絵文字の星で5段階評価して
+    *それぞれの項目の分析も絵文字を入れて出力して
+
+    #ルール
+    *100文字以内で
+    `
+
+    const result = await model.generateContent(prompt)
+    const response = result.response
+    const text = response.text()
+
+    await db.collection('users').doc(userId).set({
+      username: userName,
+      omikujiResults: admin.firestore.FieldValue.arrayUnion({ result: randomResult, date: admin.firestore.Timestamp.now() })
+    }, { merge: true })
+
+
+    const omikujiPaper =
+      `${userName}様の今日の運勢
+
+${text}
+
+過去５回のおみくじ結果: ${omikujiHistoryMessage}`
+
+    console.log(omikujiPaper)
+    await interaction.editReply(omikujiPaper)
   },
 };

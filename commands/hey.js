@@ -22,7 +22,7 @@ module.exports = {
 
   execute: async function (interaction) {
 
-    await interaction.deferReply(); 
+    await interaction.deferReply();
 
     const db = admin.firestore()
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -31,21 +31,6 @@ module.exports = {
     let omikujiHistory = [];
     let omikujiHistoryMessage = "";
     let lastOmikujiDate = null;
-
-    //ユーザーの最後のおみくじ引き日を取得
-    const lastDrawDate = userLastDrawDate.get(userId);
-
-    if (lastDrawDate) {
-      // 現在の日付を取得
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0); // 時刻を0時0分0秒に設定
-
-      // 最後のおみくじ引き日と現在の日付を比較
-      if (lastDrawDate.getTime() >= currentDate.getTime()) {
-        await interaction.reply("おみくじは1日に1回しか引けません。");
-        return;
-      }
-    }
 
     const userDoc = await db.collection('users').doc(userId).get();
 
@@ -59,15 +44,15 @@ module.exports = {
 
       // 最後のおみくじ引き日が今日であれば、おみくじを引けない
       if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
-        await interaction.reply("おみくじは1日に1回しか引けません。");
+        await interaction.editReply("おみくじは1日に1回しか引けません。");
         return;
       } else {
-      omikujiHistory = await userDoc.data().omikujiResults;
-      const recentResults = omikujiHistory.slice(-5);
-      // 各エントリのresultプロパティを抽出
-      const results = recentResults.map(entry => entry.result);
-      // 結果をカンマで結合
-      omikujiHistoryMessage = results.join(', ');
+        omikujiHistory = await userDoc.data().omikujiResults;
+        const recentResults = omikujiHistory.slice(-5);
+        // 各エントリのresultプロパティを抽出
+        const results = recentResults.map(entry => entry.result);
+        // 結果をカンマで結合
+        omikujiHistoryMessage = results.join(', ');
       }
     }
 
@@ -76,7 +61,7 @@ module.exports = {
 
     const prompt =
       `
-    あなたは{ #役割 }です。次の{ #ルール }に従って、おみくじの結果である${randomResult}に合うような回答を{ #形式 }でお願いします。
+    あなたは{ #役割 }です。次の{ #ルール }に従って、おみくじの結果である${randomResult}に合うような回答を{ #形式 }で{ #例 }のようにお願いします。
 
     #役割
     おみくじの結果に対するコメントを出力する
@@ -89,6 +74,26 @@ module.exports = {
 
     #ルール
     *100文字以内で
+
+    #例
+    中吉　🎯
+
+    金運💰:🌟🌟
+    まずまず、臨時収入も期待できそう
+
+    恋愛運💕:🌟🌟🌟
+    順調、良い出会いとチャンスに恵まれる。
+
+    仕事運💼:🌟🌟🌟🌟
+    好調、昇進昇給や転職成功のチャンスあり。
+
+    勉強運📚:🌟🌟
+    発展途上、努力次第で成績アップできる。
+
+    健康運💪:🌟🌟🌟🌟
+    良好、体調を崩しやすい季節だが、注意すれば大丈夫。
+
+    ラッキカラー:緑色のものを見につけるといいかも
     `
 
     const result = await model.generateContent(prompt)
@@ -108,7 +113,6 @@ ${text}
 
 過去５回のおみくじ結果: ${omikujiHistoryMessage}`
 
-    console.log(omikujiPaper)
-    await interaction.editReply(omikujiPaper)
+    await interaction.editReply(omikujiPaper);
   },
 };

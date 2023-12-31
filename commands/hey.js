@@ -22,6 +22,8 @@ module.exports = {
 
   execute: async function (interaction) {
 
+    await interaction.deferReply(); 
+
     const db = admin.firestore()
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const userId = interaction.user.id;
@@ -45,29 +47,29 @@ module.exports = {
     //   }
     // }
 
-    const userDoc = await db.collection('users').doc(userId).get();
+    // const userDoc = await db.collection('users').doc(userId).get();
 
-    if (userDoc.exists) {
+    // if (userDoc.exists) {
 
-      const latestResult = userDoc.data().omikujiResults[userDoc.data().omikujiResults.length - 1];
-      lastOmikujiDate = latestResult.date.toDate();
+    //   const latestResult = userDoc.data().omikujiResults[userDoc.data().omikujiResults.length - 1];
+    //   lastOmikujiDate = latestResult.date.toDate();
 
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
+    //   const currentDate = new Date();
+    //   currentDate.setHours(0, 0, 0, 0);
 
-      // // 最後のおみくじ引き日が今日であれば、おみくじを引けない
-      // if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
-      //   // await interaction.reply("おみくじは1日に1回しか引けません。");
-      //   return;
-      // } else {
-      omikujiHistory = await userDoc.data().omikujiResults;
-      const recentResults = omikujiHistory.slice(-5);
-      // 各エントリのresultプロパティを抽出
-      const results = recentResults.map(entry => entry.result);
-      // 結果をカンマで結合
-      omikujiHistoryMessage = results.join(', ');
-      // }
-    }
+    //   // // 最後のおみくじ引き日が今日であれば、おみくじを引けない
+    //   // if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
+    //   //   // await interaction.reply("おみくじは1日に1回しか引けません。");
+    //   //   return;
+    //   // } else {
+    //   omikujiHistory = await userDoc.data().omikujiResults;
+    //   const recentResults = omikujiHistory.slice(-5);
+    //   // 各エントリのresultプロパティを抽出
+    //   const results = recentResults.map(entry => entry.result);
+    //   // 結果をカンマで結合
+    //   omikujiHistoryMessage = results.join(', ');
+    //   // }
+    // }
 
     // おみくじの実行
     const randomResult = omikuji[Math.floor(Math.random() * omikuji.length)];
@@ -93,10 +95,10 @@ module.exports = {
     const response = result.response
     const text = response.text()
 
-    await db.collection('users').doc(userId).set({
-      username: userName,
-      omikujiResults: admin.firestore.FieldValue.arrayUnion({ result: randomResult, date: admin.firestore.Timestamp.now() })
-    }, { merge: true })
+    // await db.collection('users').doc(userId).set({
+    //   username: userName,
+    //   omikujiResults: admin.firestore.FieldValue.arrayUnion({ result: randomResult, date: admin.firestore.Timestamp.now() })
+    // }, { merge: true })
 
 
     const omikujiPaper =
@@ -107,6 +109,6 @@ ${text}
 過去５回のおみくじ結果: ${omikujiHistoryMessage}`
 
     console.log(omikujiPaper)
-    await interaction.reply(omikujiPaper)
+    // await interaction.editReply(omikujiPaper)
   },
 };

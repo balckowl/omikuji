@@ -18,59 +18,63 @@ module.exports = {
     .setDescription('1日1回限りのおみくじを引くことができます'),
 
   execute: async function (interaction) {
-    try {
-      console.log("コマンド実行開始");
-      await interaction.deferReply(); 
-      console.log("deferReply 完了");
 
-      const db = admin.firestore();
-      console.log("Firestore 接続");
-      const userId = interaction.user.id;
-      const userName = interaction.user.username;
+    console.log('hello')
 
-      const userDoc = await db.collection('users').doc(userId).get();
-      console.log("Firestore ドキュメント取得");
+    await interaction.reply('test')
+    // try {
+    //   console.log("コマンド実行開始");
+    //   await interaction.deferReply(); 
+    //   console.log("deferReply 完了");
 
-      let lastOmikujiDate = null;
-      let omikujiHistoryMessage = "";
+    //   const db = admin.firestore();
+    //   console.log("Firestore 接続");
+    //   const userId = interaction.user.id;
+    //   const userName = interaction.user.username;
 
-      if (userDoc.exists) {
-        const latestResult = userDoc.data().omikujiResults[userDoc.data().omikujiResults.length - 1];
-        lastOmikujiDate = latestResult.date.toDate();
+    //   const userDoc = await db.collection('users').doc(userId).get();
+    //   console.log("Firestore ドキュメント取得");
 
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
+    //   let lastOmikujiDate = null;
+    //   let omikujiHistoryMessage = "";
 
-        if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
-          await interaction.followUp("おみくじは1日に1回しか引けません。");
-          return;
-        }
+    //   if (userDoc.exists) {
+    //     const latestResult = userDoc.data().omikujiResults[userDoc.data().omikujiResults.length - 1];
+    //     lastOmikujiDate = latestResult.date.toDate();
 
-        const recentResults = userDoc.data().omikujiResults.slice(-5);
-        const results = recentResults.map(entry => entry.result);
-        omikujiHistoryMessage = results.join(', ');
-      }
+    //     const currentDate = new Date();
+    //     currentDate.setHours(0, 0, 0, 0);
 
-      const randomResult = omikuji[Math.floor(Math.random() * omikuji.length)];
-      console.log("おみくじ結果生成: " + randomResult);
+    //     if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
+    //       await interaction.followUp("おみくじは1日に1回しか引けません。");
+    //       return;
+    //     }
 
-      const prompt = `あなたの今日の運勢は${randomResult}です。運勢についてのコメントをください。`;
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
+    //     const recentResults = userDoc.data().omikujiResults.slice(-5);
+    //     const results = recentResults.map(entry => entry.result);
+    //     omikujiHistoryMessage = results.join(', ');
+    //   }
 
-      await db.collection('users').doc(userId).set({
-        username: userName,
-        omikujiResults: admin.firestore.FieldValue.arrayUnion({ result: randomResult, date: admin.firestore.Timestamp.now() })
-      }, { merge: true });
-      console.log("Firestore に結果保存");
+    //   const randomResult = omikuji[Math.floor(Math.random() * omikuji.length)];
+    //   console.log("おみくじ結果生成: " + randomResult);
 
-      const omikujiPaper = `${userName}様の今日の運勢\n\n${text}\n\n過去５回のおみくじ結果: ${omikujiHistoryMessage}`;
-      console.log("応答生成: " + omikujiPaper);
-      await interaction.editReply(omikujiPaper);
-      console.log("応答送信完了");
-    } catch (error) {
-      console.error("エラー発生: ", error);
-      await interaction.followUp("エラーが発生しました。");
-    }
+    //   const prompt = `あなたの今日の運勢は${randomResult}です。運勢についてのコメントをください。`;
+    //   const result = await model.generateContent(prompt);
+    //   const text = result.response.text();
+
+    //   await db.collection('users').doc(userId).set({
+    //     username: userName,
+    //     omikujiResults: admin.firestore.FieldValue.arrayUnion({ result: randomResult, date: admin.firestore.Timestamp.now() })
+    //   }, { merge: true });
+    //   console.log("Firestore に結果保存");
+
+    //   const omikujiPaper = `${userName}様の今日の運勢\n\n${text}\n\n過去５回のおみくじ結果: ${omikujiHistoryMessage}`;
+    //   console.log("応答生成: " + omikujiPaper);
+    //   await interaction.editReply(omikujiPaper);
+    //   console.log("応答送信完了");
+    // } catch (error) {
+    //   console.error("エラー発生: ", error);
+    //   await interaction.followUp("エラーが発生しました。");
+    // }
   },
 };

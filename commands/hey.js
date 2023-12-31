@@ -32,7 +32,7 @@ module.exports = {
     let omikujiHistoryMessage = "";
     let lastOmikujiDate = null;
 
-    ユーザーの最後のおみくじ引き日を取得
+    //ユーザーの最後のおみくじ引き日を取得
     const lastDrawDate = userLastDrawDate.get(userId);
 
     if (lastDrawDate) {

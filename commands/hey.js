@@ -22,8 +22,6 @@ module.exports = {
 
   execute: async function (interaction) {
 
-    await interaction.deferReply();
-
     const db = admin.firestore()
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const userId = interaction.user.id;
@@ -57,18 +55,18 @@ module.exports = {
       const currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
 
-      // 最後のおみくじ引き日が今日であれば、おみくじを引けない
-      if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
-        await interaction.editReply("おみくじは1日に1回しか引けません。");
-        return;
-      } else {
-        omikujiHistory = await userDoc.data().omikujiResults;
-        const recentResults = omikujiHistory.slice(-5);
-        // 各エントリのresultプロパティを抽出
-        const results = recentResults.map(entry => entry.result);
-        // 結果をカンマで結合
-        omikujiHistoryMessage = results.join(', ');
-      }
+      // // 最後のおみくじ引き日が今日であれば、おみくじを引けない
+      // if (lastOmikujiDate.getTime() >= currentDate.getTime()) {
+      //   // await interaction.reply("おみくじは1日に1回しか引けません。");
+      //   return;
+      // } else {
+      omikujiHistory = await userDoc.data().omikujiResults;
+      const recentResults = omikujiHistory.slice(-5);
+      // 各エントリのresultプロパティを抽出
+      const results = recentResults.map(entry => entry.result);
+      // 結果をカンマで結合
+      omikujiHistoryMessage = results.join(', ');
+      // }
     }
 
     // おみくじの実行
@@ -109,6 +107,6 @@ ${text}
 過去５回のおみくじ結果: ${omikujiHistoryMessage}`
 
     console.log(omikujiPaper)
-    // await interaction.editReply(omikujiPaper)
+    await interaction.reply(omikujiPaper)
   },
 };
